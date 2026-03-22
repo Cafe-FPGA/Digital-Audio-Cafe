@@ -1,55 +1,21 @@
 #include <Arduino.h>
-#include "InputManager.h"
-#include "DisplayManager.h"
-#include "MusicPlayer.h"
+
+#define TX_PIN 4
+#define RX_PIN 5
 
 // Global Objects
-InputManager input;
-DisplayManager display;
-MusicPlayer player;
-
-int currentVol = 50; // Start at 50% volume
+HardwareSerial ManagerUART(1); // Claims UART 1 (UART 0 is for USB Serial monitor)
 
 void setup() {
-    Serial.begin(115200);
-    
-    // 2 seconds to open the monitor before printing anything
-    delay(2000); 
 
-    Serial.println("\n--- DIGITAL AUDIO CAFE: ONLINE ---");
-    
-    input.init();
-    display.init();
-    player.init();
-    
-    display.drawInterface();
-    display.updateVolume(currentVol); 
+    Serial.begin(115200);
+    ManagerUART.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+
 }
 
 void loop() {
-    InputEvent e = input.poll();
-
-    // IF logic to handle inputs
-    if (e == EVENT_VOL_UP) {
-        currentVol += 2; 
-        if(currentVol > 100) currentVol = 100;
-        
-        player.setVolume(currentVol);
-        display.updateVolume(currentVol);
-        Serial.printf("Vol: %d (UP)\n", currentVol);
-    }
-    else if (e == EVENT_VOL_DOWN) {
-        currentVol -= 2;
-        if(currentVol < 0) currentVol = 0;
-        
-        player.setVolume(currentVol);
-        display.updateVolume(currentVol);
-        Serial.printf("Vol: %d (DOWN)\n", currentVol);
-    }
-    else if (e == EVENT_SELECT) {
-        display.drawTest(); // Flash Red
-        delay(100);
-        display.drawInterface(); // Redraw UI
-        display.updateVolume(currentVol); // Restore volume bar
+    if (ManagerUART.available()) {
+        String uart_in = ManagerUART.readStringUntil('\n');
+        Serial.println(uart_in);
     }
 }
