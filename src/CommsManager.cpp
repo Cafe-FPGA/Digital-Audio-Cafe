@@ -8,6 +8,10 @@ CommsManager::CommsManager() {
     current_volume = 0;
 }
 
+void CommsManager::init() {
+    ManagerUART.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+}
+
 void CommsManager::update() {
 
     if (ManagerUART.available() > 0) {
