@@ -2,7 +2,7 @@
 #include <math.h>
 #include "AudioPlayer.h"
 
-void AudioPlayer::init() {
+void AudioPlayer::init() { // CRANK UP QUALITY UPON COMPLETION OF SD CARD READING LOGIC
     i2s_config_t i2s_config = {
         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX), // ESP32 is the boss (Master), Transmitting data (TX)
         .sample_rate = 44100,                                // Standard CD audio sample rate
@@ -26,13 +26,22 @@ void AudioPlayer::init() {
     i2s_set_pin(i2s_port, &pin_config);
 }
 
-void AudioPlayer::playSineWave(int volume) {
+void AudioPlayer::setVolume(float volume_from_main) { // Volume setter and perceptual volume scaler
+    target_volume = (volume_from_main * volume_from_main * volume_from_main);
+}
+
+void AudioPlayer::setSmoothingFactor(float smoothing_factor_from_main) { // Smoothing setter
+    smoothing_factor = smoothing_factor_from_main;
+}
+
+void AudioPlayer::playSineWave() {
     static float angle = 0.0; // Encapsulation
     float angle_step = ((2.0f * 440.0f) * PI) / 44100.0f;
     int16_t sample_data[128]; // 64 stereo frames
 
     for (int i = 0; i< 64; i++) {
-        int16_t sample_val = (sin(angle) * (volume * 500));
+        current_volume = current_volume + (target_volume - current_volume) *smoothing_factor;
+        int16_t sample_val = (sin(angle) * (current_volume * 500));
         angle += angle_step;
         if (angle > 2.0 * PI) {
             angle -= (2.0 * PI);
