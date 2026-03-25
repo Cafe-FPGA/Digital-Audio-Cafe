@@ -8,14 +8,16 @@ private:
     static const int RX_PIN = 5;
     char rx_buffer[20];
     int rx_index = 0;
-    int current_volume;
+    float current_volume = 0.0f;
+    float current_smoothing = 0.033f;
 
 public:
     CommsManager();
 
     void init();
     void update();
-    int getVolume();
+    float getVolume();
+    float getSmoothing();
 };
 
 #endif
