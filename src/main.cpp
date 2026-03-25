@@ -3,7 +3,7 @@
 #include "AudioPlayer.h"
 
 // Global Variables
-int last_volume = -1;
+float last_volume = -1.0f;
 
 // Global Objects
 HardwareSerial ManagerUART(1); // Claims UART 1 (UART 0 is for USB Serial monitor)
@@ -22,7 +22,11 @@ void loop() {
 
     frontend.update();
 
-    int fetched_volume = frontend.getVolume(); // Current "system volume"
+    float fetched_volume = frontend.getVolume(); // Current "system volume"
+    float fetched_smoothing = frontend.getSmoothing(); // Current smoothing value
+    
+    audio.setVolume(fetched_volume);
+    audio.setSmoothingFactor(fetched_smoothing);
 
     // Debugging CommsManager
     if (fetched_volume != last_volume) {
@@ -31,6 +35,6 @@ void loop() {
         last_volume = fetched_volume;
     }
 
-    audio.playSineWave(fetched_volume);
+    audio.playSineWave();
 
 }
