@@ -1,7 +1,7 @@
 # Digital-Audio-Cafe
 [![License: Source-Available](https://img.shields.io/badge/License-Source--Available-blue.svg)](LICENSE) [![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-yellow.svg)](LICENSE) [![ESP32](https://img.shields.io/badge/ESP32-E7352C?style=flat&logo=espressif&logoColor=white)](https://www.espressif.com/) [![STM32](https://img.shields.io/badge/STM32-03234B?style=flat&logo=stmicroelectronics&logoColor=white)](https://www.st.com/)
 
-To facilitate my library of legally acquired lossless audio files, I aim to create a small and portable audio player. I will prototype, assemble, and program everything myself. Through this process I will further my understanding of C++, embedded systems, and system architecting!
+To facilitate my library of legally acquired lossless audio files, I aim to create a small and portable audio player. I will prototype, assemble, and program everything myself. Through this process I will further my understanding of C/C++, embedded systems, and system architecting!
 
 More in depth README coming soon.
 
