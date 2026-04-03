@@ -23,18 +23,35 @@ More in depth README coming soon.
 
 # Progress
 
-## STM32
+## General
+
+- [x] Transition to Orchestrator Pattern and ensure adherence to the Single Responsibility Principle
+- [ ] Zero-Trust Architecture
+- [x] Refactor code to follow my preferences in variables
+
+## STM32U575
 
 - [x] Send UART "VOL: __" commands to ESP
 - [x] Read ENC11 encoder spins for volume
 - [x] Debounce ENC11
 - [ ] Fix MUTE state logic
+- [ ] Integrate Adafruit ANO module
+- [ ] Integrate QSPI flash module
+- [ ] Integrate 2 inch LCD
+- [ ] RTC
 
 ## ESP32-S3
 
 - [x] Parse STM32 UART messages for volume
 - [x] Output Sinewave to DAC
-- [ ] Volume ramping logic (exponential & S-curve)
+- [x] Implement Volume ramping logic (exponential & S-curve)
+- [ ] Validate Volume ramping
+- [x] Integrate and validate "SdFat" library from Bill Greiman (thanks, Bill)
+- [x] SDManager class
+
+## Hardware
+
+- Picked out filament for casing: ASA
 
 ## License
 
