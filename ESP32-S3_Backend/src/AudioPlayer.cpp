@@ -5,15 +5,20 @@
 
 void AudioPlayer::init() {
     
-    bufferStorage = (uint8_t*)heap_caps_malloc(AUDIO_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
-    bufferStruct = (StaticStreamBuffer_t*)heap_caps_malloc(sizeof(StaticStreamBuffer_t), MALLOC_CAP_SPIRAM);
+    bool success = sd_manager.init_sd_card();
+    if(!success) {
+        Serial.println("Warning: AudioPlayer could not mount SD Card.");
+    }
 
-    if (bufferStorage == NULL || bufferStruct == NULL) {
+    buffer_storage = (uint8_t*)heap_caps_malloc(AUDIO_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
+    buffer_struct = (StaticStreamBuffer_t*)heap_caps_malloc(sizeof(StaticStreamBuffer_t), MALLOC_CAP_SPIRAM);
+
+    if (buffer_storage == NULL || buffer_struct == NULL) {
         Serial.println("FATAL: Failed to allocate PSRAM for Audio Buffer!");
         return;
     }
 
-    audioBuffer = xStreamBufferCreateStatic(AUDIO_BUFFER_SIZE, 1024, bufferStorage, bufferStruct);
+    audio_buffer = xStreamBufferCreateStatic(AUDIO_BUFFER_SIZE, 1024, buffer_storage, buffer_struct);
     Serial.println("128KB PSRAM Audio Buffer Initialized!");
 
     // CRANK UP QUALITY UPON COMPLETION OF SD CARD READING LOGIC    
@@ -40,8 +45,8 @@ void AudioPlayer::init() {
     i2s_set_pin(i2s_port, &pin_config);
 
     xTaskCreatePinnedToCore(      
-        AudioPlayer::audioTaskTrampoline,      // 1. Pointer to the task function
-        "AudioTask",                           // 2. Name of task (for debugging, e.g., "AudioTask")
+        AudioPlayer::audio_task_trampoline,      // 1. Pointer to the task function
+        "audio_task",                           // 2. Name of task (for debugging, e.g., "audio_task")
         8192,                                  // 3. Stack size in words (Use 4096 or 8192 for now)
         this,                                  // 4. Parameter to pass to function (Usually NULL)
         2,                                     // 5. Task priority (0 is lowest, 1 is normal, configMAX_PRIORITIES-1 is highest)
@@ -50,41 +55,36 @@ void AudioPlayer::init() {
     );
 }
 
-bool AudioPlayer::initSDCard() {
-    spiBus.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-
-    // Next: Send UART to STM32, SD Card initialized/not
-    if(!sd.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(16), &spiBus))) {
-        Serial.println("SD Card Mount Failed!");
-        return false;
-    }
-    Serial.printf("SD Card Mounted! FAT Type: FAT%d\n", sd.fatType());
-    return true;
+void AudioPlayer::audio_task_trampoline(void* this_instance) {
+    AudioPlayer* player = static_cast<AudioPlayer*>(this_instance);
+    player->audio_task();
 }
 
-void AudioPlayer::audioTaskTrampoline(void* _thisInstance) {
-    AudioPlayer* player = static_cast<AudioPlayer*>(_thisInstance);
-    player->audioTask();
-}
-
-void AudioPlayer::audioTask() {
+void AudioPlayer::audio_task() {
     while(1) {
-        // Stream Buffer reading logic here
-        vTaskDelay(pdMS_TO_TICKS(10));
+        uint8_t temp_chunk[1024];
+        size_t bytes_read = sd_manager.read_audio_chunk(temp_chunk, 1024);
+
+        if (bytes_read > 0) {
+            xStreamBufferSend(audio_buffer, temp_chunk, bytes_read, portMAX_DELAY);
+        }
+
+        if (bytes_read == 0) {
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+
     }
 }
 
-// space for file system --------------------------------------------------------------
-
-void AudioPlayer::setVolume(float volume_from_main) { // Volume setter and perceptual volume scaler
+void AudioPlayer::set_volume(float volume_from_main) { // Volume setter and perceptual volume scaler
     target_volume = (volume_from_main * volume_from_main * volume_from_main);
 }
 
-void AudioPlayer::setSmoothingFactor(float smoothing_factor_from_main) { // Smoothing setter
+void AudioPlayer::set_smoothing_factor(float smoothing_factor_from_main) { // Smoothing setter
     smoothing_factor = smoothing_factor_from_main;
 }
 
-void AudioPlayer::playSineWave() {
+void AudioPlayer::play_sine_wave() {
     static float angle = 0.0; // Encapsulation
     float angle_step = ((2.0f * 440.0f) * PI) / 44100.0f;
     int16_t sample_data[128]; // 64 stereo frames
