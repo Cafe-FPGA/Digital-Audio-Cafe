@@ -1,38 +1,38 @@
 {
   "version": "2.0.0",
-  "tasks": [
+  "tasks":[
     {
       "label": "STM32: Build",
       "type": "shell",
       "command": "cube-cmake",
-      "args": [
+      "args":[
         "--build",
-        "${workspaceFolder}/build/Release"
+        "${workspaceFolder}/build/Debug"
       ],
       "group": "build",
       "presentation": {"reveal": "always", "panel": "shared", "clear": true, "showReuseMessage": false},
-      "problemMatcher": []
+      "problemMatcher":[]
     },
     {
       "label": "STM32: Clean",
       "type": "shell",
       "command": "cube-cmake",
-      "args": [
+      "args":[
         "--build",
-        "${workspaceFolder}/build/Release",
+        "${workspaceFolder}/build/Debug",
         "--target",
         "clean"
       ],
       "presentation": {"reveal": "always", "panel": "shared", "clear": true, "showReuseMessage": false},
-      "problemMatcher": []
+      "problemMatcher":[]
     },
     {
       "label": "STM32: Flash",
       "type": "shell",
       "command": "C:\\Program Files\\STMicroelectronics\\STM32Cube\\STM32CubeProgrammer\\bin\\STM32_Programmer_CLI.exe",
-      "args": [
+      "args":[
         "-c", "port=SWD",
-        "-w", "${workspaceFolder}/build/Release/${workspaceFolderBasename}.elf",
+        "-w", "${workspaceFolder}/build/Debug/${workspaceFolderBasename}.elf",
         "-v",
         "-rst"
       ],

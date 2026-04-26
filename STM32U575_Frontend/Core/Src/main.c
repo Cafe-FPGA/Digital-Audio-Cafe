@@ -62,6 +62,61 @@ static void MX_I2C2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void I2C2_Bus_Recovery(void) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // Enable Port F Clock
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+
+    // Configure PF0 (SDA) and PF1 (SCL) for manual bit-banging
+    GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD; // Open-Drain
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+    // 1. Ensure both lines start HIGH (idle state)
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_SET);
+    HAL_Delay(1);
+
+    // 2. The 9-Clock Recovery Loop
+    for (int i = 0; i < 9; i++) {
+        // Drive SCL Low
+        HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_RESET);
+        HAL_Delay(1);
+        
+        // Drive SCL High
+        HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_SET);
+        HAL_Delay(1);
+
+        // Check SDA while SCL is High. If the slave released it, it will float HIGH.
+        if (HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_0) == GPIO_PIN_SET) {
+            break; 
+        }
+    }
+    
+    // 3. Flawless STOP Condition
+    // SCL is currently High from the loop. Bring it Low to prepare.
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    
+    // SDA Low
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    
+    // SCL High
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_SET);
+    HAL_Delay(1);
+    
+    // SDA High (The definitive STOP signal)
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0, GPIO_PIN_SET);
+    HAL_Delay(1);
+    
+    // Release the pins back to the hardware
+    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_0 | GPIO_PIN_1);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -211,7 +266,7 @@ static void MX_I2C2_Init(void)
 {
 
   /* USER CODE BEGIN I2C2_Init 0 */
-
+  I2C2_Bus_Recovery();
   /* USER CODE END I2C2_Init 0 */
 
   /* USER CODE BEGIN I2C2_Init 1 */
